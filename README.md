@@ -1,1 +1,1 @@
-# campus-blog-site
+# CAMPUS BLOG SITE
