@@ -64,6 +64,65 @@ nav ul li a{
     border-radius: 50%;
 }
 main{
+    width: 100%;
+    margin-top: 5% auto;
+}
+
+/* Main Section */
+.featured-blogs{
     width: 80%;
-    margin-top: 5%;
+    margin: 10% auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: start;
+}
+.featured-blogs h2{
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    color: #4caf50;
+    text-align: start;
+}
+.rows{
+    width: 80%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.blog-cards {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.blog-card {
+  width: 100%;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  overflow: hidden;
+  transition: transform 0.2s ease;
+}
+
+.blog-card:hover {
+  transform: translateY(-5px);
+}
+
+.blog-card img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.blog-content {
+  padding: 1rem;
+}
+
+.blog-content h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.blog-content p {
+  font-size: 0.9rem;
+  color: #4caf50;
 }

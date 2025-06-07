@@ -35,9 +35,31 @@
     </header>
 
     <main>
-        <section class="featured-blogs">
-            
+        <section class="hero">
+            <input>
         </section>
+
+        <section class="featured-blogs">
+            <h2>Featured</h2>
+            <div class="rows">
+                <% if (posts && posts.length > 0) { %>
+                    <% posts.forEach(function(post) { %>
+                        <div class="blog-card">
+                            <a href="<%= post.url %>" target="_blank">
+                            <img src="<%= post.thumbnail %>" alt="Post thumbnail">
+                            <div class="blog-content">
+                                <h3><%= post.title %></h3>
+                                <p>Read more on Reddit</p>
+                            </div>
+                            </a>
+                        </div>
+                <% }); %>
+                <% } else { %>
+                    <p>No posts found.</p>
+                <% } %>
+            </div>
+        </section>
+
     </main>
 </body>
 </html>
