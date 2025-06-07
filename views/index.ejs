@@ -36,29 +36,41 @@
 
     <main>
         <section class="hero">
-            <input>
+            <input type="text" placeholder="Search for posts...">
         </section>
 
-        <section class="featured-blogs">
-            <h2>Featured</h2>
-            <div class="rows">
-                <% if (posts && posts.length > 0) { %>
-                    <% posts.forEach(function(post) { %>
-                        <div class="blog-card">
-                            <a href="<%= post.url %>" target="_blank">
-                            <img src="<%= post.thumbnail %>" alt="Post thumbnail">
-                            <div class="blog-content">
-                                <h3><%= post.title %></h3>
-                                <p>Read more on Reddit</p>
-                            </div>
-                            </a>
-                        </div>
-                <% }); %>
+        <section class="college-posts">
+            <h2>📚 Top College Posts</h2>
+            <div class="college-col">
+                <% if (collegePosts && collegePosts.length > 0) { %>
+                    <% collegePosts.forEach(post => { %>
+                        <li><a href="<%= post.url %>" target="_blank"><%= post.title %></a></li>
+                    <% }) %>
                 <% } else { %>
-                    <p>No posts found.</p>
+                    <li>No posts found.</li>
                 <% } %>
             </div>
         </section>
+
+        <section class="featured-images">
+            <h2>Featured Campus Life</h2>
+            <div class="images">
+                <% if (imagePosts && imagePosts.length > 0) { %>
+                    <% imagePosts.forEach(post => { %>
+                        <div class="image-col">
+                            <img src="<%= post.thumbnail %>" alt="Image for <%= post.title %>">
+                            <a href="<%= post.url %>" target="_blank">
+                                <p><%= post.title %></p>
+                            </a>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <p>No featured images found.</p>
+                <% } %>
+            </div>
+        </section>
+
+        <section class="users-blog"></section>
 
     </main>
 </body>

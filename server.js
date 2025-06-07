@@ -30,13 +30,19 @@ async function fetchRedditPosts() {
     });
 
     const data = await response.json();
-    cachedPosts = data.data.children.map(child => ({
-      title: child.data.title,
-      url: 'https://reddit.com' + child.data.permalink,
-      thumbnail: child.data.thumbnail && child.data.thumbnail.startsWith('http')
-        ? child.data.thumbnail
-        : 'https://via.placeholder.com/300x180?text=No+Image'
-    }));
+    cachedPosts = data.data.children.map(child => {
+    const thumbnail = 
+          child.data.thumbnail && /^https?:\/\//.test(child.data.thumbnail)
+            ? child.data.thumbnail
+            : child.data.preview?.images?.[0]?.source?.url?.replace(/&amp;/g, '&') || 'https://via.placeholder.com/300x180?text=No+Image';
+
+        return {
+          title: child.data.title,
+          url: 'https://reddit.com' + child.data.permalink,
+          thumbnail
+        };
+    });
+
 
     console.log('✅ Reddit posts fetched and cached.');
   } catch (error) {
@@ -67,11 +73,55 @@ cron.schedule('*/5 * * * *', () => {
 
 // Initial fetch on server start
 fetchRedditPosts();
+app.get('/', async (req, res) => {
+  try {
+    const token = await getRedditAccessToken();
 
-// Home route serves cached posts
-app.get('/', (req, res) => {
-  res.render('index', { posts: cachedPosts });
+    // Fetch /r/college (text-based)
+    const collegeRes = await fetch('https://oauth.reddit.com/r/college/top?limit=3', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'User-Agent': 'campus-blog-site/1.0 (by /u/fraizyglime)'
+      }
+    });
+    const collegeData = await collegeRes.json();
+    const collegePosts = collegeData.data.children.map(child => ({
+      title: child.data.title,
+      url: 'https://reddit.com' + child.data.permalink
+    }));
+
+    // Fetch /r/pics (image-based)
+    const picsRes = await fetch('https://oauth.reddit.com/r/pics/top?limit=10', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'User-Agent': 'campus-blog-site/1.0 (by /u/fraizyglime)'
+      }
+    });
+    const picsData = await picsRes.json();
+    const imagePosts = picsData.data.children
+      .map(child => {
+        const previewUrl = child.data.preview?.images?.[0]?.source?.url?.replace(/&amp;/g, '&');
+        if (!previewUrl) return null;
+        return {
+          title: child.data.title,
+          url: 'https://reddit.com' + child.data.permalink,
+          thumbnail: previewUrl
+        };
+      })
+      .filter(Boolean)
+      .slice(0, 3); // Limit to 4 images max
+
+    res.render('index', {
+      collegePosts,
+      imagePosts
+    });
+
+  } catch (error) {
+    console.error('Error fetching Reddit posts:', error);
+    res.status(500).send('Internal server error.');
+  }
 });
+
 
 // Start server
 app.listen(PORT, () => {
