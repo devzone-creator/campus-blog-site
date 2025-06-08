@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const cors = require('cors');
 const morgan = require('morgan');
+const fetch = require('node-fetch');
 
 const app = express();
 const PORT = process.env.PORT || 9070;
@@ -52,21 +53,29 @@ app.use(morgan('dev'));
 // Route to show home page with blogs
 app.get('/', async (req, res) => {
   try {
-    const fetch = require('node-fetch'); // place at the top if not already there
+    let imagePosts = [];
+    try {
+      const response = await fetch('https://www.reddit.com/r/campuslife/top.json?limit=4', {
+        headers: {
+          'User-Agent': 'campus-blog-bot/1.0 (by u/exampleuser)'
+        }
+      });
 
-let imagePosts = [];
-try {
-  const response = await fetch('https://www.reddit.com/r/campuslife/top.json?limit=4');
-  const redditData = await response.json();
-  imagePosts = redditData.data.children.map(post => ({
-    title: post.data.title,
-    thumbnail: post.data.thumbnail && post.data.thumbnail.startsWith('http') ? post.data.thumbnail : '/default.jpg',
-    url: 'https://www.reddit.com' + post.data.permalink,
-  }));
-} catch (redditErr) {
-  console.error('Error fetching Reddit posts:', redditErr);
-  imagePosts = [];
-}
+      if (!response.ok) throw new Error(`Reddit returned status ${response.status}`);
+
+      const redditData = await response.json();
+      imagePosts = redditData.data.children.map(post => ({
+        title: post.data.title,
+        thumbnail:
+          post.data.thumbnail && post.data.thumbnail.startsWith('http')
+            ? post.data.thumbnail
+            : '/placeholder.jpg',
+        url: 'https://www.reddit.com' + post.data.permalink
+      }));
+    } catch (err) {
+      console.error('Error fetching Reddit posts:', err);
+      imagePosts = [];
+    }
 
     const featuredBlogs = await Blog.find({ isFeatured: true }).limit(3);
     const userBlogs = await Blog.find({ isFeatured: false }).limit(5);

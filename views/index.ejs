@@ -45,21 +45,21 @@
     </section>
 
     <section class="featured-images">
-    <h2>Featured Campus Life</h2>
-    <div class="images">
-        <% if (imagePosts && imagePosts.length > 0) { %>
-        <% imagePosts.forEach(post => { %>
-            <div class="image-col">
-            <img src="<%= post.thumbnail %>" alt="Image for <%= post.title %>">
-            <a href="<%= post.url %>" target="_blank">
-                <p><%= post.title %></p>
-            </a>
-            </div>
-        <% }) %>
-        <% } else { %>
-        <p>No featured images found.</p>
-        <% } %>
-    </div>
+      <h2>Featured Campus Life</h2>
+      <div class="images">
+          <% if (imagePosts && imagePosts.length > 0) { %>
+            <% imagePosts.forEach(post => { %>
+                <div class="image-col">
+                  <img src="<%= post.thumbnail %>" alt="Image for <%= post.title %>">
+                  <a href="<%= post.url %>" target="_blank">
+                      <p><%= post.title %></p>
+                  </a>
+                </div>
+            <% }) %>
+          <% } else { %>
+            <p>No featured images found.</p>
+          <% } %>
+      </div>
     </section>
 
 
