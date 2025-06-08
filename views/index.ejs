@@ -37,6 +37,11 @@
     <main>
         <section class="hero">
             <input type="text" placeholder="Search for posts...">
+            <button id="openModal">Create a Blog</button>
+            <div class="hero-content">
+                <h1>Welcome to Campus Chronicles</h1>
+                <p>Your daily dose of campus life, events, and student stories.</p>
+            </div>
         </section>
 
         <section class="featured-images">
@@ -57,7 +62,29 @@
             </div>
         </section>
 
-        <section class="users-blog"></section>
+        <section class="user-blogs">
+            <h2>📝 Student Blog Posts</h2>
+            <div class="blog-list">
+                <% if (userBlogs && userBlogs.length > 0) { %>
+                    <% userBlogs.forEach(blog => { %>
+                        <div class="blog-card">
+                            <div class="blog-text">
+                                <p class="category"><%= blog.category %></p>
+                                <h3><%= blog.title %></h3>
+                                <p class="excerpt"><%= blog.summary %></p>
+                                <a href="<%= blog.url %>" target="_blank" class="read-more">Read M...</a>
+                            </div>
+                            <div class="blog-image">
+                                <img src="<%= blog.image %>" alt="Blog image for <%= blog.title %>">
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <p>No blog posts found.</p>
+                <% } %>
+            </div>
+        </section>
+
 
     </main>
 </body>

@@ -65,11 +65,14 @@ nav ul li a{
 }
 main{
     width: 100%;
-    margin-top: 5% auto;
+    margin-top: 0 auto;
 }
 .hero{
-    width: 80%;
-    margin: 3% auto;
+    width: 100%;
+    background-image: url('hero.jpg');
+    background-size: cover;
+    background-position: center;
+    height: 50vh;
     display: flex;
     justify-content: center;
     align-items: center;  
