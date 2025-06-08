@@ -1,148 +1,124 @@
 const express = require('express');
-const morgan = require('morgan');
-const fetch = require('node-fetch');
-const cron = require('node-cron');
+const multer = require('multer');
+const mongoose = require('mongoose');
+const path = require('path');
+const fs = require('fs');
 const cors = require('cors');
-
-const CLIENT_ID = process.env.CLIENT_ID || '0Izfz1ol30M6-Lka5s6uvg';
-const CLIENT_SECRET = process.env.CLIENT_SECRET || 'bRDpLetPvQLYDFQmm0w7YbsxUwmMSg';
+const morgan = require('morgan');
 
 const app = express();
 const PORT = process.env.PORT || 9070;
 
+// MongoDB connection
+mongoose.connect('mongodb+srv://fritz:fritzDb@cluster0.j4jeb.mongodb.net/campus_blogs?retryWrites=true&w=majority&appName=Cluster0', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+
+const blogSchema = new mongoose.Schema({
+  title: String,
+  category: String,
+  summary: String,
+  content: String,
+  imageUrl: String,
+  isFeatured: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now },
+});
+
+const Blog = mongoose.model('Blog', blogSchema);
+
+// Multer setup for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = 'public/uploads';
+    fs.mkdirSync(uploadPath, { recursive: true });
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = Date.now() + '-' + file.originalname;
+    cb(null, uniqueName);
+  },
+});
+const upload = multer({ storage });
+
+// Middleware
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 app.use(cors());
 app.use(morgan('dev'));
 
-let cachedPosts = []; // In-memory cache
-
-// Reusable fetch function
-async function fetchRedditPosts() {
-  try {
-    const token = await getRedditAccessToken();
-    const response = await fetch('https://oauth.reddit.com/r/college/top?limit=3', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'User-Agent': 'campus-blog-site/1.0 (by /u/fraizyglime)'
-      }
-    });
-
-    const data = await response.json();
-    cachedPosts = data.data.children.map(child => {
-    const thumbnail = 
-          child.data.thumbnail && /^https?:\/\//.test(child.data.thumbnail)
-            ? child.data.thumbnail
-            : child.data.preview?.images?.[0]?.source?.url?.replace(/&amp;/g, '&') || 'https://via.placeholder.com/300x180?text=No+Image';
-
-        return {
-          title: child.data.title,
-          url: 'https://reddit.com' + child.data.permalink,
-          thumbnail
-        };
-    });
-
-
-    console.log('✅ Reddit posts fetched and cached.');
-  } catch (error) {
-    console.error('❌ Failed to fetch Reddit posts:', error.message);
-  }
-}
-
-// Get Reddit API token
-async function getRedditAccessToken() {
-  const response = await fetch('https://www.reddit.com/api/v1/access_token', {
-    method: 'POST',
-    headers: {
-      'Authorization': 'Basic ' + Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64'),
-      'Content-Type': 'application/x-www-form-urlencoded'
-    },
-    body: 'grant_type=client_credentials'
-  });
-
-  const data = await response.json();
-  return data.access_token;
-}
-
-// Schedule background fetching every 5 mins
-cron.schedule('*/5 * * * *', () => {
-  console.log('⏰ Running scheduled fetch...');
-  fetchRedditPosts();
-});
-
-const userBlogs = [
-  {
-    title: "The Ultimate Guide to Campus Dining",
-    category: "Student Life",
-    summary: "Explore the best dining options on campus, from quick bites to gourmet meals.",
-    url: "/blog/dining-guide",
-    image: "/images/blogs/dining.jpg"
-  },
-  {
-    title: "Ace Your Exams: Effective Study Strategies",
-    category: "Academics",
-    summary: "Learn how to prepare for exams effectively with our expert study tips and techniques.",
-    url: "/blog/exam-tips",
-    image: "/images/blogs/exam.jpg"
-  }
-];
-
-
-// Initial fetch on server start
-fetchRedditPosts();
+// Route to show home page with blogs
 app.get('/', async (req, res) => {
   try {
-    const token = await getRedditAccessToken();
+    const fetch = require('node-fetch'); // place at the top if not already there
 
-    // Fetch /r/college (text-based)
-    const collegeRes = await fetch('https://oauth.reddit.com/r/college/top?limit=3', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'User-Agent': 'campus-blog-site/1.0 (by /u/fraizyglime)'
-      }
-    });
-    const collegeData = await collegeRes.json();
-    const collegePosts = collegeData.data.children.map(child => ({
-      title: child.data.title,
-      url: 'https://reddit.com' + child.data.permalink
-    }));
+let imagePosts = [];
+try {
+  const response = await fetch('https://www.reddit.com/r/campuslife/top.json?limit=4');
+  const redditData = await response.json();
+  imagePosts = redditData.data.children.map(post => ({
+    title: post.data.title,
+    thumbnail: post.data.thumbnail && post.data.thumbnail.startsWith('http') ? post.data.thumbnail : '/default.jpg',
+    url: 'https://www.reddit.com' + post.data.permalink,
+  }));
+} catch (redditErr) {
+  console.error('Error fetching Reddit posts:', redditErr);
+  imagePosts = [];
+}
 
-    // Fetch /r/pics (image-based)
-    const picsRes = await fetch('https://oauth.reddit.com/r/pics/top?limit=10', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'User-Agent': 'campus-blog-site/1.0 (by /u/fraizyglime)'
-      }
-    });
-    const picsData = await picsRes.json();
-    const imagePosts = picsData.data.children
-      .map(child => {
-        const previewUrl = child.data.preview?.images?.[0]?.source?.url?.replace(/&amp;/g, '&');
-        if (!previewUrl) return null;
-        return {
-          title: child.data.title,
-          url: 'https://reddit.com' + child.data.permalink,
-          thumbnail: previewUrl
-        };
-      })
-      .filter(Boolean)
-      .slice(0, 3); // Limit to 4 images max
+    const featuredBlogs = await Blog.find({ isFeatured: true }).limit(3);
+    const userBlogs = await Blog.find({ isFeatured: false }).limit(5);
 
-    res.render('index', {
-      collegePosts,
-      imagePosts,
-      userBlogs,
-    });
-
+    res.render('index', { imagePosts, featuredBlogs, userBlogs });
   } catch (error) {
-    console.error('Error fetching Reddit posts:', error);
-    res.status(500).send('Internal server error.');
+    console.error('Error loading homepage:', error);
+    res.render('index', {
+      imagePosts: [],
+      featuredBlogs: [],
+      userBlogs: []
+    });
   }
 });
 
+// Route to show full blog post
+app.get('/blog/:id', async (req, res) => {
+  try {
+    const blog = await Blog.findById(req.params.id);
+    if (!blog) return res.status(404).send('Blog not found');
+    res.render('blog', { blog });
+  } catch (err) {
+    console.error('Error loading blog:', err);
+    res.status(500).send('Could not load blog.');
+  }
+});
+
+// Handle blog form submission
+app.post('/blog', upload.single('image'), async (req, res) => {
+  try {
+    const { title, category, content } = req.body;
+    const imageUrl = req.file ? '/uploads/' + req.file.filename : '';
+
+    const summary = content.length > 200 ? content.substring(0, 197) + '...' : content;
+
+    const newBlog = new Blog({
+      title,
+      category,
+      content,
+      summary,
+      imageUrl,
+    });
+
+    await newBlog.save();
+    res.redirect('/');
+  } catch (err) {
+    console.error('Error saving blog:', err);
+    res.status(500).send('Could not save blog.');
+  }
+});
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Server is listening at ${PORT}`);
+  console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
