@@ -37,7 +37,7 @@
     <main>
         <section class="hero">
             <input type="text" placeholder="Search for posts...">
-            <button id="openModal">Create a Blog</button>
+            <button onclick="document.getElementById('blogModal').style.display='block'">Write a Blog</button>
             <div class="hero-content">
                 <h1>Welcome to Campus Chronicles</h1>
                 <p>Your daily dose of campus life, events, and student stories.</p>
@@ -83,6 +83,25 @@
                     <p>No blog posts found.</p>
                 <% } %>
             </div>
+        </section>
+
+        <section id="blogModal" style="display:none;" class="modal">
+            <form action="/submit-post" method="POST" enctype="multipart/form-data">
+                <label for="title">Title</label>
+                <input type="text" name="title" id="title" required>
+
+                <label for="category">Category</label>
+                <input type="text" name="category" id="category" required>
+
+                <label for="content">Content</label>
+                <textarea name="content" id="content" required></textarea>
+
+                <label for="image">Image</label>
+                <input type="file" name="image" id="image" accept="image/*" required>
+
+                <button type="submit">Submit Post</button>
+            </form>
+
         </section>
 
 

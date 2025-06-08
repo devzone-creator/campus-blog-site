@@ -71,6 +71,24 @@ cron.schedule('*/5 * * * *', () => {
   fetchRedditPosts();
 });
 
+const userBlogs = [
+  {
+    title: "The Ultimate Guide to Campus Dining",
+    category: "Student Life",
+    summary: "Explore the best dining options on campus, from quick bites to gourmet meals.",
+    url: "/blog/dining-guide",
+    image: "/images/blogs/dining.jpg"
+  },
+  {
+    title: "Ace Your Exams: Effective Study Strategies",
+    category: "Academics",
+    summary: "Learn how to prepare for exams effectively with our expert study tips and techniques.",
+    url: "/blog/exam-tips",
+    image: "/images/blogs/exam.jpg"
+  }
+];
+
+
 // Initial fetch on server start
 fetchRedditPosts();
 app.get('/', async (req, res) => {
@@ -113,7 +131,8 @@ app.get('/', async (req, res) => {
 
     res.render('index', {
       collegePosts,
-      imagePosts
+      imagePosts,
+      userBlogs,
     });
 
   } catch (error) {
