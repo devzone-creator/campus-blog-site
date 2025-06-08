@@ -39,19 +39,6 @@
             <input type="text" placeholder="Search for posts...">
         </section>
 
-        <section class="college-posts">
-            <h2>📚 Top College Posts</h2>
-            <div class="college-col">
-                <% if (collegePosts && collegePosts.length > 0) { %>
-                    <% collegePosts.forEach(post => { %>
-                        <li><a href="<%= post.url %>" target="_blank"><%= post.title %></a></li>
-                    <% }) %>
-                <% } else { %>
-                    <li>No posts found.</li>
-                <% } %>
-            </div>
-        </section>
-
         <section class="featured-images">
             <h2>Featured Campus Life</h2>
             <div class="images">
